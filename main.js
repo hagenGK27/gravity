@@ -18,8 +18,13 @@ scene.add(plane);
 const ballGeometry = new THREE.SphereGeometry(0.3, 32, 32);
 const ballMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
 const ball = new THREE.Mesh(ballGeometry, ballMaterial);
-ball.position.set(0, 1, 0); // Set initial position of the ball
+ball.position.set(0, 5, 0); // Set initial position of the ball
 scene.add(ball);
+
+// define gravitational acceleration
+const gravitationalConstant = 0.005;
+const gravityDirection = new THREE.Vector3(0, -1, 0); // Gravity direction is down
+
 
 // Handle keyboard input for tilting the flat area
 const keyboardState = {};
@@ -33,8 +38,7 @@ document.addEventListener('keyup', (event) => {
 
 // Animation loop
 function animate() {
-  requestAnimationFrame(animate);
-
+  
   // Check keyboard input and tilt the plane accordingly
   if (keyboardState['KeyA']) {
     plane.rotation.z += 0.01;
@@ -43,8 +47,19 @@ function animate() {
   if (keyboardState['KeyD']) {
     plane.rotation.z -= 0.01;
   }
+  
+  // calculate gravitational force on the ball
+  const gravitationalForce = gravityDirection.clone().multiplyScalar(gravitationalConstant);
+
+  // update ball velocity
+  ball.velocity = ball.velocity || new THREE.Vector3(); // initialize velocity if not exist
+  ball.velocity.add(gravitationalForce);  // add gravitational force to velocity
+
+  // update the position of the ball based on velocity
+  ball.position.add(ball.velocity);
 
   renderer.render(scene, camera);
+  requestAnimationFrame(animate);
 }
 
 // Set initial camera position
