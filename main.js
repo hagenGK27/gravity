@@ -1,70 +1,90 @@
+// main.js
+
 import * as THREE from 'three';
 
+// Set up scene
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+// Adjust camera position and look at the scene from a 45-degree angle to the x-axis
+camera.position.set(5, 5, 0);
+camera.lookAt(0, 0, 0);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Create a flat area (plane)
-const planeGeometry = new THREE.BoxGeometry(10, 0.001, 10);
-const planeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
-const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-// plane.rotation.x = -Math.PI / 2; // Rotate the plane to be flat
-scene.add(plane);
+// Add ambient light
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Soft white light
+scene.add(ambientLight);
 
-// Create a ball (sphere)
-const ballGeometry = new THREE.SphereGeometry(0.3, 32, 32);
+// Create box (with thickness) instead of plane
+const boxGeometry = new THREE.BoxGeometry(5, 0.2, 5);
+const boxMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00, opacity: 1, transparent: false });
+const box = new THREE.Mesh(boxGeometry, boxMaterial);
+
+scene.add(box);
+
+// Create ball
+const ballGeometry = new THREE.SphereGeometry(0.2, 32, 32);
 const ballMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
 const ball = new THREE.Mesh(ballGeometry, ballMaterial);
-ball.position.set(0, 5, 0); // Set initial position of the ball
+ball.position.set(0, 1, 0);
 scene.add(ball);
 
-// define gravitational acceleration
-const gravitationalConstant = 0.005;
-const gravityDirection = new THREE.Vector3(0, -1, 0); // Gravity direction is down
+// Create 3D coordinate system without labeled axes
+const axesHelper = new THREE.AxesHelper(2);
+scene.add(axesHelper);
 
+// Set up keyboard controls
+const keys = { tiltUp: false, tiltDown: false, tiltLeft: false, tiltRight: false };
 
-// Handle keyboard input for tilting the flat area
-const keyboardState = {};
 document.addEventListener('keydown', (event) => {
-  keyboardState[event.code] = true;
+    switch (event.key) {
+        case 'ArrowUp':
+            keys.tiltUp = true;
+            break;
+        case 'ArrowDown':
+            keys.tiltDown = true;
+            break;
+        case 'ArrowLeft':
+            keys.tiltLeft = true;
+            break;
+        case 'ArrowRight':
+            keys.tiltRight = true;
+            break;
+    }
 });
 
 document.addEventListener('keyup', (event) => {
-  keyboardState[event.code] = false;
+    switch (event.key) {
+        case 'ArrowUp':
+            keys.tiltUp = false;
+            break;
+        case 'ArrowDown':
+            keys.tiltDown = false;
+            break;
+        case 'ArrowLeft':
+            keys.tiltLeft = false;
+            break;
+        case 'ArrowRight':
+            keys.tiltRight = false;
+            break;
+    }
 });
 
-// Animation loop
-function animate() {
-  
-  // Check keyboard input and tilt the plane accordingly
-  if (keyboardState['KeyA']) {
-    plane.rotation.z += 0.01;
-  }
+// Set up animation
+const animate = () => {
+    requestAnimationFrame(animate);
 
-  if (keyboardState['KeyD']) {
-    plane.rotation.z -= 0.01;
-  }
-  
-  // calculate gravitational force on the ball
-  const gravitationalForce = gravityDirection.clone().multiplyScalar(gravitationalConstant);
+    // Update box tilt based on pressed keys
+    if (keys.tiltUp) box.rotation.x += 0.02;
+    if (keys.tiltDown) box.rotation.x -= 0.02;
+    if (keys.tiltLeft) box.rotation.z += 0.02;
+    if (keys.tiltRight) box.rotation.z -= 0.02;
 
-  // update ball velocity
-  ball.velocity = ball.velocity || new THREE.Vector3(); // initialize velocity if not exist
-  ball.velocity.add(gravitationalForce);  // add gravitational force to velocity
+    renderer.render(scene, camera);
+};
 
-  // update the position of the ball based on velocity
-  ball.position.add(ball.velocity);
-
-  renderer.render(scene, camera);
-  requestAnimationFrame(animate);
-}
-
-// Set initial camera position
-// camera.position.z = 5;
-camera.position.set(0, 5, 15);
-
-// Start the animation loop
+// Start animation
 animate();
